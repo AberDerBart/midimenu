@@ -34,14 +34,22 @@ class MidiMenu:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('config')
+    parser.add_argument('--list', '-l', action='store_true')
+    parser.add_argument('--port', '-p')
+    parser.add_argument('--config', '-c')
     args = parser.parse_args()
+
+    if args.list:
+        for name in mido.get_input_names():
+            print("'{}'".format(name))
+        parser.exit()
+
+    if not args.config or not args.port:
+        parser.error('Either --list or --config and --port must be specified.')
 
     config = json.load(open(args.config))
 
-    midiport = 'SparkFun Pro Micro:SparkFun Pro Micro MIDI 1 20:0'
-
-    menu = MidiMenu(midiport, config)
+    menu = MidiMenu(args.port, config)
     menu.run()
 
 if __name__ == "__main__":
