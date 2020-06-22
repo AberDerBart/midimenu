@@ -7,7 +7,7 @@ clean:
 	rm -f midimenu
 
 install: midimenu
-	cp midimenu /bin/
+	install -Dt $(DESTDIR)/bin midimenu
 
 uninstall:
-	rm -f /bin/midimenu
+	rm -f $(DESTDIR)/bin/midimenu
