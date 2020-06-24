@@ -2,6 +2,7 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
+#include <unistd.h>
 
 #include <rtmidi/RtMidi.h>
 #include <nlohmann/json.hpp>
@@ -129,13 +130,12 @@ int main(int argc, char** argv) {
 	midiin->setCallback(&callback);
 	midiin->ignoreTypes(false, false, false);
 
-	std::cout << "\nReading MIDI input ... press <enter> to quit.\n";
-	char input;
-	std::cin.get(input);
+	std::cout << "Reading MIDI input ..." << std::endl;
+	while(true){
+		sleep(1000000);
+	}
 
 	midiin->cancelCallback();
-	delete midiin;
-
 	return 0;
 }
 
