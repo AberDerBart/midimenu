@@ -34,10 +34,19 @@ void callback(double deltatime, std::vector<unsigned char>* message, void *userD
 	}
 
 	unsigned int nBytes = message->size();
+
+	std::cout << "Received MIDI message:";
+	for(auto it = message->begin(); it != message->end(); it++) {
+		std::cout << " " << std::hex << (int) *it;
+	}
+	std::cout << std::endl;
+
 	// ignore messages that are not 3 bytes long
 	if (message->size() < 3) return;
 	// ignore any non-"Note on"-messages
-	if (message->at(0) & 0xf0 != 0x90) return;
+	if ((message->at(0) & 0xf0) != 0x90) {
+		return;
+	}
 
 	int note = message->at(1);
 
