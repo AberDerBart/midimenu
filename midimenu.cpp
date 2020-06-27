@@ -3,6 +3,9 @@
 #include <thread>
 #include <mutex>
 #include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include <rtmidi/RtMidi.h>
 #include <nlohmann/json.hpp>
@@ -11,24 +14,37 @@ std::map<int, std::string> mapping;
 RtMidiIn* midiin = 0;
 std::mutex mtx;
 std::thread thread;
+pid_t currentPid = 0;
 
-int exec(std::string cmd) {
-	mtx.lock();
-	int retn = system(cmd.c_str());
-	mtx.unlock();
-	return retn;
+int execProgram(std::string cmd) {
+	pid_t pid = fork();
+	std::cout << "pid after fork: " << pid << std::endl;
+	if (pid) {
+		return pid;
+	}
+	int foo = system(cmd.c_str());
+	_exit(0);
 }
 
-bool threadRunning() {
-	if (mtx.try_lock()) {
-		mtx.unlock();
-		return false;
+void killProgram(pid_t pid, int signal = SIGTERM) {
+	kill(pid, SIGTERM);
+}
+
+void signalHandler(int signum) {
+	if (signum == SIGCHLD) {
+		currentPid = 0;
 	}
-	return true;
+	if (signum == SIGTERM || signum == SIGKILL) {
+		if (currentPid) {
+			killProgram(currentPid, signum);
+		}
+		exit(1);
+	}
 }
 
 void callback(double deltatime, std::vector<unsigned char>* message, void *userData){
-	if (threadRunning()) {
+	if (currentPid) {
+		std::cout << "program still running, pid: " << std::dec << currentPid << std::endl;
 		// skip all events when a command is running
 		return;
 	}
@@ -53,10 +69,7 @@ void callback(double deltatime, std::vector<unsigned char>* message, void *userD
 	try{
 		std::string command = mapping.at(note);
 		std::cout << "Triggering command \"" << command << "\"" << deltatime << std::endl;
-		if (thread.joinable()){
-			thread.join();
-		}
-		thread = std::thread(exec, command);
+		currentPid = execProgram(command);
 	} catch (const std::exception& e) {
 		std::cout << "Note " << note << " not configured" << std::endl;
 	}
@@ -87,6 +100,7 @@ std::map<int, std::string> readConfig(char* fileName) {
 }
 
 int main(int argc, char** argv) {
+	signal(SIGCHLD, signalHandler);
 	try {
 		midiin = new RtMidiIn();
 	} catch (RtMidiError &error) {

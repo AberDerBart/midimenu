@@ -1,5 +1,8 @@
-midimenu: midimenu.cpp
-	g++ -o $@ $< -lrtmidi -pthread
+%.o: %.c
+	g++ -c $<
+
+midimenu: midimenu.o
+	g++ -o $@ $< -lrtmidi
 
 .PHONY: install clean uninstall
 

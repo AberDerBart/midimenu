@@ -1,6 +1,9 @@
 # binary
 midimenu
 
+# c++ objects
+*.o
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
