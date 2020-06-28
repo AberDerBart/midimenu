@@ -10,24 +10,45 @@
 #include <rtmidi/RtMidi.h>
 #include <nlohmann/json.hpp>
 
-std::map<int, std::string> mapping;
+typedef struct {
+	std::string cmd;
+	bool killOnRelease;
+} NoteConfig;
+
+std::map<int, NoteConfig> mapping;
 RtMidiIn* midiin = 0;
 std::mutex mtx;
 std::thread thread;
 pid_t currentPid = 0;
 
+typedef enum {
+	INVALID = -1,
+	NOTE_ON = 0x90,
+	NOTE_OFF = 0x80
+} MidiCommand;
+
 int execProgram(std::string cmd) {
 	pid_t pid = fork();
-	std::cout << "pid after fork: " << pid << std::endl;
 	if (pid) {
+		std::cout << "child process pid: " << std::dec << pid << std::endl;
 		return pid;
 	}
-	int foo = system(cmd.c_str());
+	std::cout << "starting program \"" << cmd << "\"" << ", pid: " << pid << std::endl;
+
+
+	char* c_cmd = (char*) cmd.c_str();
+	char *const args[4] = { "sh", "-c", c_cmd, NULL };
+	int foo = execv("/bin/sh", args);
 	_exit(0);
 }
 
 void killProgram(pid_t pid, int signal = SIGTERM) {
-	kill(pid, SIGTERM);
+	if (pid) {
+		std::cout << "killing program with pid " << std::dec << pid << std::endl;
+		kill(pid, signal);
+	} else {
+		std::cout << "No program to kill" << std::endl;
+	}
 }
 
 void signalHandler(int signum) {
@@ -42,42 +63,72 @@ void signalHandler(int signum) {
 	}
 }
 
-void callback(double deltatime, std::vector<unsigned char>* message, void *userData){
+void handleNoteOn(NoteConfig cfg) {
 	if (currentPid) {
 		std::cout << "program still running, pid: " << std::dec << currentPid << std::endl;
-		// skip all events when a command is running
 		return;
 	}
+	currentPid = execProgram(cfg.cmd);
+}
 
-	unsigned int nBytes = message->size();
+void handleNoteOff(NoteConfig cfg) {
+	if (cfg.killOnRelease){
+		killProgram(currentPid, SIGTERM);
+		return;
+	}
+}
 
+void callback(double deltatime, std::vector<unsigned char>* message, void *userData){
 	std::cout << "Received MIDI message:";
 	for(auto it = message->begin(); it != message->end(); it++) {
 		std::cout << " " << std::hex << (int) *it;
 	}
 	std::cout << std::endl;
 
+
 	// ignore messages that are not 3 bytes long
 	if (message->size() < 3) return;
-	// ignore any non-"Note on"-messages
-	if ((message->at(0) & 0xf0) != 0x90) {
+
+	// ignore non-note-on/off messages
+	MidiCommand command = (MidiCommand) (message->at(0) & 0xf0);
+	if (command != NOTE_ON && command != NOTE_OFF) {
+		std::cout << "ignoring non-note-on/off message." << std::endl;
 		return;
 	}
 
+	// get configuration for triggered note
 	int note = message->at(1);
-
+	NoteConfig noteConfig;
 	try{
-		std::string command = mapping.at(note);
-		std::cout << "Triggering command \"" << command << "\"" << deltatime << std::endl;
-		currentPid = execProgram(command);
+		noteConfig = mapping.at(note);
 	} catch (const std::exception& e) {
 		std::cout << "Note " << note << " not configured" << std::endl;
+		return;
+	}
+
+	switch(command) {
+		case NOTE_ON:
+			handleNoteOn(noteConfig);
+			break;
+		case NOTE_OFF:
+			handleNoteOff(noteConfig);
+			break;
+		default:
+			std::cout << "Command not supported";
+			break;
 	}
 }
 
+NoteConfig parseNoteConfig(nlohmann::json j) {
+	NoteConfig retn;
+	retn.cmd = j["cmd"];
+	retn.killOnRelease = j["killOnRelease"] == "true";
 
-std::map<int, std::string> readConfig(char* fileName) {
-	std::map<int, std::string> map;
+	return retn;
+}
+
+std::map<int, NoteConfig> readConfig(char* fileName) {
+	std::map<int, NoteConfig> map;
 
 	std::cout << "Reading config file \"" << fileName << "\"" << std::endl;
 	std::fstream configStream;
@@ -90,7 +141,7 @@ std::map<int, std::string> readConfig(char* fileName) {
 	for (auto it = j.begin(); it != j.end(); ++it) {
 		try {
 			int index = std::stoi(it.key());
-			map[index] = it.value();
+			map[index] = parseNoteConfig(it.value());
 		} catch (const std::exception& e) {
 			std::cout << "Error converting key \"" << it.key() << "\", skipping." << std::endl;
 		}

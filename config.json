@@ -1,5 +1,14 @@
 {
-    "0": "echo 0",
-    "1": "echo 1",
-    "2": "echo 2; sleep 3; echo 4"
+    "0": {
+	    "cmd": "echo 0",
+	    "killOnRelease": "false"
+    },
+    "1": {
+	    "cmd": "echo 1",
+	    "killOnRelease": "false"
+    },
+    "2": {
+	    "cmd": "echo 2; sleep 5; echo 4",
+	    "killOnRelease": "true"
+    }
 }
