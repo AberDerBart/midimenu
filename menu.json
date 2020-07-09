@@ -1,0 +1,12 @@
+[
+	{
+		"cmd":"fooo",
+		"title": "Survivor - Burning Heart",
+		"killOnRelease": true
+	},
+	{
+		"cmd":"bar",
+		"title": "Liquid Fire - Gone too far",
+		"killOnRelease": false
+	}
+]

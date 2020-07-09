@@ -1,13 +1,13 @@
 %.o: %.c
 	g++ -c $<
 
-midimenu: midimenu.o
-	g++ -o $@ $< -lrtmidi
+midimenu: menuParser.o main.o config.o midi.o renderMenu.o control.o
+	g++ -o $@ $^ -lrtmidi -lncurses -lmenu
 
 .PHONY: install clean uninstall
 
 clean:
-	rm -f midimenu
+	rm -f midimenu *.o
 
 install: midimenu
 	install -Dt $(DESTDIR)/bin midimenu
