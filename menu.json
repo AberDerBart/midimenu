@@ -1,12 +1,12 @@
 [
 	{
-		"cmd":"fooo",
-		"title": "Survivor - Burning Heart",
-		"killOnRelease": true
+		"cmd":"sleep 10",
+		"title": "sleep 10",
+		"killOnRelease": false
 	},
 	{
-		"cmd":"bar",
-		"title": "Liquid Fire - Gone too far",
-		"killOnRelease": false
+		"cmd":"sleep 10",
+		"title": "sleep 10 KOR",
+		"killOnRelease": true
 	}
 ]

@@ -52,4 +52,12 @@ namespace Menu {
 		menu_driver(menu->renderMenu, REQ_UP_ITEM);
 		refresh();
 	}
+
+	MenuEntry* getCurrentEntry(Menu* menu) {
+		ITEM* current = current_item(menu->renderMenu); 
+		int index = item_index(current);
+
+		return &menu->entries.at(index);
+
+	}
 }

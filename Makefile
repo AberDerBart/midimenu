@@ -1,7 +1,7 @@
 %.o: %.c
 	g++ -c $<
 
-midimenu: menuParser.o main.o config.o midi.o renderMenu.o control.o
+midimenu: menuParser.o main.o config.o midi.o renderMenu.o control.o process.o
 	g++ -o $@ $^ -lrtmidi -lncurses -lmenu
 
 .PHONY: install clean uninstall

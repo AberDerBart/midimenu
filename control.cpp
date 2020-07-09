@@ -2,16 +2,40 @@
 #include "midi.h"
 #include "config.h"
 #include "renderMenu.h"
+#include "process.h"
 #include <iostream>
 
 void handleMidiCommand(double deltatime, std::vector<unsigned char>* msg, Menu::Menu* menu) {
-	if(Midi::isNoteOn(msg)) {
-		int note = Midi::getNote(msg);
+	Menu::MenuEntry* currentEntry = Menu::getCurrentEntry(menu);
+	
 
+	if(!Midi::isNoteOn(msg) && !Midi::isNoteOff(msg)) {
+		return;
+	}
+
+	int note = Midi::getNote(msg);
+
+	if(!Process::isRunning()) {
 		if(note == Config::note_next) {
-			Menu::nextEntry(menu);
+			if(Midi::isNoteOn(msg)) {
+				Menu::nextEntry(menu);
+			}
 		} else if (note == Config::note_prev) {
-			Menu::prevEntry(menu);
+			if(Midi::isNoteOff(msg)) {
+				Menu::prevEntry(menu);
+			}
+		} else if (note == Config::note_select) {
+			if(Midi::isNoteOn(msg)) {
+				Process::run(currentEntry->cmd);
+			}
+		}
+	} else {
+		if(note == Config::note_select) {
+			if (Midi::isNoteOff(msg)) {
+				if (currentEntry->killOnRelease) {
+					Process::killProcess();
+				}
+			}
 		}
 	}
 }

@@ -11,6 +11,7 @@ namespace Menu {
 		MenuEntry entry;
 		entry.title = j["title"];
 		entry.cmd = j["cmd"];
+		entry.killOnRelease = j["killOnRelease"];
 		return entry;
 	}
 

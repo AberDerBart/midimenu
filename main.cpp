@@ -9,6 +9,7 @@
 #include "version.h"
 #include "renderMenu.h"
 #include "control.h"
+#include "process.h"
 
 void callback(double deltatime, std::vector<unsigned char>* msg, void* userData) {
 	Menu::Menu* menu = (Menu::Menu*) userData;
@@ -33,6 +34,9 @@ int main(int argc, char** argv) {
 	initRender();
 	Menu::prepareRender(&menu);
 	Menu::render(&menu);
+
+	// prepare process handling
+	Process::init();
 	
 	// initialize midi device
 	RtMidiIn* midiIn = Midi::deviceByPortName(Config::portName);
@@ -40,7 +44,6 @@ int main(int argc, char** argv) {
 		std::cerr << "No MIDI input device matching the name \"" << Config::portName << "\" found";
 		return -2;
 	}
-
 	midiIn->setCallback(callback, &menu);
 	
 	// wait

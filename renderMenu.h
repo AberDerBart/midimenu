@@ -15,4 +15,6 @@ namespace Menu {
 
 	void nextEntry(Menu*);
 	void prevEntry(Menu*);
+
+	MenuEntry* getCurrentEntry(Menu*);
 }
