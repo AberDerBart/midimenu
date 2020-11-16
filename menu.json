@@ -1,0 +1,12 @@
+[
+	{
+		"cmd":"sleep 10",
+		"title": "sleep 10",
+		"killOnRelease": false
+	},
+	{
+		"cmd":"sleep 10",
+		"title": "sleep 10 KOR",
+		"killOnRelease": true
+	}
+]
