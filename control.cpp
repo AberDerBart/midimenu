@@ -35,7 +35,9 @@ void handleMidiCommand(double deltatime, std::vector<unsigned char>* msg, Menu::
 				if (currentEntry->killOnRelease) {
 					Process::killProcess();
 				}
-			}
+			} else {
+                Process::killProcess();
+            }
 		}
 	}
 }
