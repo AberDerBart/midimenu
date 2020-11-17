@@ -26,6 +26,7 @@ namespace Menu {
 		for (auto it = menu->entries.begin(); it != menu->entries.end(); ++it) {
 			menu->renderItems.push_back(new_item(it->title.c_str(), NULL));
 		}
+		menu->renderItems.push_back(NULL);
 		menu->renderMenu = new_menu(menu->renderItems.data());
 	}
 
